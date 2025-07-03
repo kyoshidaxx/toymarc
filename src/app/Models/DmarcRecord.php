@@ -16,12 +16,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $dkim_result
  * @property bool $spf_aligned
  * @property string $spf_result
- * @property-read DmarcReport $dmarcReport
- * @method static \Illuminate\Database\Eloquent\Builder selectRaw(string $expression)
+ * @property-read \App\Models\DmarcReport $dmarcReport
+ * @method static \Illuminate\Database\Eloquent\Builder|DmarcRecord query()
+ * @method static \Illuminate\Database\Query\Builder selectRaw(string $expression)
  */
 class DmarcRecord extends Model
 {
-    use HasFactory;
+    use HasFactory/*<DmarcRecord>*/;
 
     /**
      * The attributes that are mass assignable.
@@ -51,7 +52,7 @@ class DmarcRecord extends Model
     ];
 
     /**
-     * Get the DMARC report that owns the record.
+     * @return BelongsTo<DmarcReport, DmarcRecord>
      */
     public function dmarcReport(): BelongsTo
     {

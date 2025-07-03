@@ -20,6 +20,7 @@ class DmarcDashboardController extends Controller
      */
     public function index(): Response
     {
+        /** @var \Illuminate\Support\Collection<int, \App\Models\DmarcReport> $reports */
         $reports = DmarcReport::with('records')
             ->orderBy('begin_date', 'desc')
             ->get()

@@ -19,7 +19,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $policy_pct
  * @property array $raw_data
  * @property string $file_hash
- * @property-read \Illuminate\Database\Eloquent\Collection|DmarcRecord[] $records
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\DmarcRecord[] $records
+ * @property bool $dkim_aligned
+ * @property bool $spf_aligned
+ * @method static \Illuminate\Database\Eloquent\Builder|DmarcReport query()
  * @method static \Illuminate\Database\Eloquent\Builder byDateRange(string $startDate, string $endDate)
  * @method static \Illuminate\Database\Eloquent\Builder byOrgName(string $orgName)
  * @method static \Illuminate\Database\Eloquent\Builder byPolicyDomain(string $domain)
@@ -29,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class DmarcReport extends Model
 {
-    use HasFactory;
+    use HasFactory/*<DmarcReport>*/;
 
     /**
      * The attributes that are mass assignable.
@@ -62,7 +65,7 @@ class DmarcReport extends Model
     ];
 
     /**
-     * Get the records for the DMARC report.
+     * @return HasMany<DmarcRecord>
      */
     public function records(): HasMany
     {

@@ -6,6 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $dmarc_report_id
+ * @property string $source_ip
+ * @property int $count
+ * @property string $disposition
+ * @property bool $dkim_aligned
+ * @property string $dkim_result
+ * @property bool $spf_aligned
+ * @property string $spf_result
+ * @property-read DmarcReport $dmarcReport
+ */
 class DmarcRecord extends Model
 {
     use HasFactory;

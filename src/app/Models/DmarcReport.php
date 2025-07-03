@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $org_name
+ * @property string $email
+ * @property string $report_id
+ * @property \Carbon\Carbon $begin_date
+ * @property \Carbon\Carbon $end_date
+ * @property string $policy_domain
+ * @property string $policy_p
+ * @property int $policy_pct
+ * @property array $raw_data
+ * @property string $file_hash
+ * @property-read \Illuminate\Database\Eloquent\Collection|DmarcRecord[] $records
+ */
 class DmarcReport extends Model
 {
     use HasFactory;

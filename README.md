@@ -36,14 +36,13 @@ mkdir src
 2. Docker コンテナを起動：
 
 ```bash
-cd infra
 docker-compose up -d --build
 ```
 
 3. Laravel プロジェクトを作成：
 
 ```bash
-docker-compose exec app composer create-project laravel/laravel . --prefer-dist
+cd src && docker-compose run --rm app composer create-project laravel/laravel . --prefer-dist
 ```
 
 4. 権限を設定：
@@ -58,6 +57,7 @@ docker-compose exec app chmod -R 777 storage bootstrap/cache
 docker-compose exec app sed -i 's/DB_HOST=127.0.0.1/DB_HOST=db/g' .env
 docker-compose exec app sed -i 's/DB_USERNAME=root/DB_USERNAME=laravel/g' .env
 docker-compose exec app sed -i 's/DB_PASSWORD=/DB_PASSWORD=laravel_password/g' .env
+docker-compose exec app sed -i 's/DB_CONNECTION=sqlite/DB_CONNECTION=mysql/g' .env
 ```
 
 6. アプリケーションキーを生成：
@@ -83,32 +83,32 @@ docker-compose exec app php artisan migrate
 
 ```bash
 # コンテナ停止
-cd infra && docker-compose down
+docker-compose down
 
 # コンテナ再起動
-cd infra && docker-compose restart
+docker-compose restart
 
 # ログ確認
-cd infra && docker-compose logs -f
+docker-compose logs -f
 
 # コンテナ内でコマンド実行
-cd infra && docker-compose exec app php artisan [command]
+docker-compose exec app php artisan [command]
 ```
 
 ### Laravel コマンド
 
 ```bash
 # Artisanコマンド実行
-cd infra && docker-compose exec app php artisan [command]
+docker-compose exec app php artisan [command]
 
 # Composerコマンド実行
-cd infra && docker-compose exec app composer [command]
+docker-compose exec app composer [command]
 
 # マイグレーション実行
-cd infra && docker-compose exec app php artisan migrate
+docker-compose exec app php artisan migrate
 
 # キャッシュクリア
-cd infra && docker-compose exec app php artisan cache:clear
+docker-compose exec app php artisan cache:clear
 ```
 
 ## 🗂️ プロジェクト構造
@@ -153,13 +153,13 @@ cd infra && docker-compose exec app chmod -R 777 storage bootstrap/cache
 1. MySQL コンテナが起動しているか確認：
 
 ```bash
-cd infra && docker-compose ps
+docker-compose ps
 ```
 
 2. データベース設定を確認：
 
 ```bash
-cd infra && docker-compose exec app cat .env | grep DB_
+docker-compose exec app cat .env | grep DB_
 ```
 
 ### コンテナが起動しない場合
@@ -167,12 +167,12 @@ cd infra && docker-compose exec app cat .env | grep DB_
 1. ログを確認：
 
 ```bash
-cd infra && docker-compose logs
+docker-compose logs
 ```
 
 2. コンテナを再ビルド：
 
 ```bash
-cd infra && docker-compose down
-cd infra && docker-compose up -d --build
+docker-compose down
+docker-compose up -d --build
 ```

@@ -24,45 +24,13 @@ cd toymarc
 docker-compose up -d --build
 ```
 
-3. 依存関係をインストール：
-
-```bash
-# PHP依存関係
-docker-compose exec app composer install
-
-# Node.js依存関係
-cd src && npm install
-```
-
-4. 環境設定ファイルを作成：
-
-```bash
-docker-compose exec app cp .env.example .env
-```
-
-5. アプリケーションキーを生成：
-
-```bash
-docker-compose exec app php artisan key:generate
-```
-
-6. マイグレーションとシードを実行：
-
-```bash
-docker-compose exec app php artisan migrate --seed
-```
-
-7. フロントエンドをビルド：
-
-```bash
-cd src && npm run build
-```
-
 **初期ユーザーのアクセス情報**（DatabaseSeeder 設定より）：
 
 - **メールアドレス**: `test@example.com`
 - **パスワード**: `password`（UserFactory のデフォルト）
 - **メール認証**: 済み（`email_verified_at`が設定済み）
+
+**注意**: ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます。
 
 ### 手動セットアップ（詳細）
 
@@ -72,53 +40,13 @@ cd src && npm run build
 docker-compose up -d --build
 ```
 
-2. **PHP 依存関係をインストール**：
-
-```bash
-docker-compose exec app composer install
-```
-
-3. **Node.js 依存関係をインストール**：
-
-```bash
-cd src && npm install
-```
-
-4. **環境設定ファイルを作成**：
-
-```bash
-docker-compose exec app cp .env.example .env
-```
-
-5. **アプリケーションキーを生成**：
-
-```bash
-docker-compose exec app php artisan key:generate
-```
-
-6. **権限を設定**：
-
-```bash
-docker-compose exec app chmod -R 777 storage bootstrap/cache
-```
-
-7. **マイグレーションとシードを実行**：
-
-```bash
-docker-compose exec app php artisan migrate --seed
-```
-
-8. **フロントエンドをビルド**：
-
-```bash
-cd src && npm run build
-```
-
 **初期ユーザーのアクセス情報**（DatabaseSeeder 設定より）：
 
 - **メールアドレス**: `test@example.com`
 - **パスワード**: `password`（UserFactory のデフォルト）
 - **メール認証**: 済み（`email_verified_at`が設定済み）
+
+**注意**: ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます。
 
 ## 📊 アプリケーションの使い方
 
@@ -277,6 +205,9 @@ docker-compose exec app php artisan dmarc:import [file_path]
 # 初期ユーザー作成（DatabaseSeeder使用）
 docker-compose exec app php artisan db:seed
 # アクセス情報: メールアドレス = 'test@example.com', パスワード = 'password'
+
+# フロントエンドビルド
+docker-compose exec app npm run build
 
 ### フロントエンドコマンド
 

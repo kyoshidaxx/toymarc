@@ -7,10 +7,9 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
-      - ./src:/var/www/html
       - dmarc_reports:/var/www/html/storage/app/dmarc_reports
     ports:
-      - "8000:8000"
+      - "8000:80"
     environment:
       - DB_HOST=db
       - DB_DATABASE=toymarc

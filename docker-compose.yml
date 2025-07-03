@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: infra/Dockerfile
-    container_name: laravel-frankenphp-app
+    container_name: toymarc-app
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
@@ -11,33 +11,26 @@ services:
     ports:
       - "80:80"
     networks:
-      - laravel-network
+      - toymarc-network
     depends_on:
       - db
-    environment:
-      - DB_HOST=db
-      - DB_DATABASE=laravel
-      - DB_USERNAME=laravel
-      - DB_PASSWORD=laravel_password
 
   db:
-    image: mysql:8.0
-    container_name: laravel-frankenphp-db
+    image: mysql:8.4
+    container_name: toymarc-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: laravel
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: laravel_password
+      MYSQL_DATABASE: toymarc
+      MYSQL_ROOT_PASSWORD: toymarc_password
     ports:
       - "3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
     networks:
-      - laravel-network
+      - toymarc-network
 
 networks:
-  laravel-network:
+  toymarc-network:
     driver: bridge
 
 volumes:

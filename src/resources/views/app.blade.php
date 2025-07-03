@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DMARC Reports Dashboard</title>
     @viteReactRefresh
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
 </head>
 <body class="font-sans antialiased">

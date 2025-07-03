@@ -25,6 +25,8 @@ Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
 
 // Settings API
 Route::post('/settings/import-reports', [SettingsController::class, 'importReports'])->name('settings.import-reports');
+Route::post('/settings/upload-reports', [SettingsController::class, 'uploadReports'])->name('settings.upload-reports');
 Route::post('/settings/clear-cache', [SettingsController::class, 'clearCache'])->name('settings.clear-cache');
+Route::post('/settings/cleanup-storage', [SettingsController::class, 'cleanupStorage'])->name('settings.cleanup-storage');
 Route::get('/settings/logs', [SettingsController::class, 'getLogs'])->name('settings.get-logs');
 Route::get('/settings/log-files', [SettingsController::class, 'getLogFiles'])->name('settings.get-log-files');

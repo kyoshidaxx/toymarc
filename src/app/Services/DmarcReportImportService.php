@@ -80,7 +80,7 @@ class DmarcReportImportService
     /**
      * Import a single DMARC report file.
      */
-    private function importSingleReport(string $filePath): void
+    public function importSingleReport(string $filePath): void
     {
         $content = Storage::disk('dmarc')->get($filePath);
         if ($content === false) {
@@ -89,11 +89,13 @@ class DmarcReportImportService
 
         $fileHash = hash('sha256', $content);
 
-        // Check if report already exists
-        if (DmarcReport::query()->where('file_hash', $fileHash)->exists()) {
+        // Check if report already exists by file hash
+        $existingReport = DmarcReport::query()->where('file_hash', $fileHash)->first();
+        if ($existingReport) {
             Log::info('DMARCレポートは既に取り込み済みです', [
                 'file' => $filePath,
                 'hash' => $fileHash,
+                'report_id' => $existingReport->id,
             ]);
             return;
         }
@@ -102,11 +104,13 @@ class DmarcReportImportService
         $report = $this->parserService->parseXmlReport($content);
 
         // Check for duplicate report by metadata
-        if ($this->isDuplicateReport($report)) {
+        $duplicateReport = $this->findDuplicateReport($report);
+        if ($duplicateReport) {
             Log::info('DMARCレポートは重複しています', [
                 'file' => $filePath,
                 'report_id' => $report->report_id,
                 'org_name' => $report->org_name,
+                'existing_report_id' => $duplicateReport->id,
             ]);
             return;
         }
@@ -140,6 +144,18 @@ class DmarcReportImportService
             ->where('begin_date', $report->begin_date)
             ->where('end_date', $report->end_date)
             ->exists();
+    }
+
+    /**
+     * Find duplicate report based on metadata.
+     */
+    private function findDuplicateReport(DmarcReport $report): ?DmarcReport
+    {
+        return DmarcReport::query()->where('report_id', $report->report_id)
+            ->where('org_name', $report->org_name)
+            ->where('begin_date', $report->begin_date)
+            ->where('end_date', $report->end_date)
+            ->first();
     }
 
     /**
@@ -190,5 +206,69 @@ class DmarcReportImportService
             'auth_success_count' => $authSuccessCount,
             'auth_failure_count' => $totalEmails - $authSuccessCount,
         ];
+    }
+
+    /**
+     * Clean up storage by removing old files.
+     * 
+     * @return array<string, mixed>
+     */
+    public function cleanupStorage(): array
+    {
+        $results = [
+            'deleted_files' => 0,
+            'deleted_size' => 0,
+            'errors' => [],
+        ];
+
+        try {
+            // Get all XML files in storage
+            $files = Storage::disk('dmarc')->files('');
+            $xmlFiles = array_filter($files, function ($file) {
+                return pathinfo($file, PATHINFO_EXTENSION) === 'xml';
+            });
+
+            foreach ($xmlFiles as $file) {
+                try {
+                    // Check if file is older than 30 days
+                    $lastModified = Storage::disk('dmarc')->lastModified($file);
+                    $daysOld = (time() - $lastModified) / (24 * 60 * 60);
+
+                    if ($daysOld > 30) {
+                        $fileSize = Storage::disk('dmarc')->size($file);
+                        Storage::disk('dmarc')->delete($file);
+                        
+                        $results['deleted_files']++;
+                        $results['deleted_size'] += $fileSize;
+                        
+                        Log::info('古いファイルを削除しました', [
+                            'file' => $file,
+                            'days_old' => round($daysOld),
+                            'size' => $fileSize,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $results['errors'][] = "ファイル {$file} の削除に失敗: " . $e->getMessage();
+                    Log::error('ファイル削除エラー', [
+                        'file' => $file,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            Log::info('ストレージクリーンアップ完了', [
+                'deleted_files' => $results['deleted_files'],
+                'deleted_size' => $results['deleted_size'],
+                'errors' => count($results['errors']),
+            ]);
+
+        } catch (\Exception $e) {
+            $results['errors'][] = 'ストレージクリーンアップ中にエラーが発生: ' . $e->getMessage();
+            Log::error('ストレージクリーンアップエラー', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return $results;
     }
 } 

@@ -1,21 +1,26 @@
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head, router } from '@inertiajs/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export default function Settings({ settings, storageInfo, flash }) {
     const [loading, setLoading] = useState({
-        importReports: false,
+        uploadReports: false,
         clearCache: false,
         reloadConfig: false,
-        viewLogs: false
+        viewLogs: false,
+        cleanupStorage: false
     });
 
     const [showLogModal, setShowLogModal] = useState(false);
+    const [showUploadModal, setShowUploadModal] = useState(false);
     const [logData, setLogData] = useState(null);
     const [logFiles, setLogFiles] = useState([]);
     const [selectedLogFile, setSelectedLogFile] = useState('laravel.log');
     const [logLines, setLogLines] = useState(100);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [dragActive, setDragActive] = useState(false);
+    const fileInputRef = useRef(null);
 
     // フラッシュメッセージの表示
     useEffect(() => {
@@ -25,15 +30,69 @@ export default function Settings({ settings, storageInfo, flash }) {
         if (flash?.error) {
             alert('エラー: ' + flash.error);
         }
+        if (flash?.details) {
+            const errorDetails = Array.isArray(flash.details) ? flash.details.join('\n') : flash.details;
+            alert('詳細エラー:\n' + errorDetails);
+        }
     }, [flash]);
 
-    const handleImportReports = async () => {
-        setLoading(prev => ({ ...prev, importReports: true }));
-        router.post('/settings/import-reports', {}, {
+    const handleUploadReports = async () => {
+        if (selectedFiles.length === 0) {
+            alert('ファイルを選択してください');
+            return;
+        }
+
+        setLoading(prev => ({ ...prev, uploadReports: true }));
+        
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+            formData.append('files[]', file);
+        });
+
+        router.post('/settings/upload-reports', formData, {
             onFinish: () => {
-                setLoading(prev => ({ ...prev, importReports: false }));
+                setLoading(prev => ({ ...prev, uploadReports: false }));
+                setShowUploadModal(false);
+                setSelectedFiles([]);
             }
         });
+    };
+
+    const handleFileSelect = (event) => {
+        const files = Array.from(event.target.files);
+        setSelectedFiles(prev => [...prev, ...files]);
+    };
+
+    const handleDrag = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActive(true);
+        } else if (e.type === "dragleave") {
+            setDragActive(false);
+        }
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const files = Array.from(e.dataTransfer.files);
+            setSelectedFiles(prev => [...prev, ...files]);
+        }
+    };
+
+    const removeFile = (index) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const clearFiles = () => {
+        setSelectedFiles([]);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleClearCache = async () => {
@@ -82,6 +141,19 @@ export default function Settings({ settings, storageInfo, flash }) {
         } finally {
             setLoading(prev => ({ ...prev, viewLogs: false }));
         }
+    };
+
+    const handleCleanupStorage = async () => {
+        if (!confirm('30日以上古いDMARCレポートファイルを削除します。続行しますか？')) {
+            return;
+        }
+
+        setLoading(prev => ({ ...prev, cleanupStorage: true }));
+        router.post('/settings/cleanup-storage', {}, {
+            onFinish: () => {
+                setLoading(prev => ({ ...prev, cleanupStorage: false }));
+            }
+        });
     };
 
     const loadLogFile = async (filename) => {
@@ -259,21 +331,21 @@ export default function Settings({ settings, storageInfo, flash }) {
                         <CardTitle>クイックアクション</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                             <button 
-                                onClick={handleImportReports}
-                                disabled={loading.importReports}
+                                onClick={() => setShowUploadModal(true)}
+                                disabled={loading.uploadReports}
                                 className={`p-4 border border-gray-300 rounded-lg transition-colors ${
-                                    loading.importReports 
+                                    loading.uploadReports 
                                         ? 'bg-gray-100 cursor-not-allowed' 
                                         : 'hover:bg-blue-50 hover:border-blue-300'
                                 }`}
                             >
                                 <div className="text-center">
                                     <div className="text-lg font-medium text-gray-900">
-                                        {loading.importReports ? '取り込み中...' : 'レポート取り込み'}
+                                        {loading.uploadReports ? 'アップロード中...' : 'レポートアップロード'}
                                     </div>
-                                    <div className="text-sm text-gray-500">DMARCレポートを手動で取り込み</div>
+                                    <div className="text-sm text-gray-500">DMARCレポートファイルをアップロード</div>
                                 </div>
                             </button>
                             
@@ -327,10 +399,129 @@ export default function Settings({ settings, storageInfo, flash }) {
                                     <div className="text-sm text-gray-500">アプリケーションログを表示</div>
                                 </div>
                             </button>
+
+                            <button 
+                                onClick={handleCleanupStorage}
+                                disabled={loading.cleanupStorage}
+                                className={`p-4 border border-gray-300 rounded-lg transition-colors ${
+                                    loading.cleanupStorage 
+                                        ? 'bg-gray-100 cursor-not-allowed' 
+                                        : 'hover:bg-red-50 hover:border-red-300'
+                                }`}
+                            >
+                                <div className="text-center">
+                                    <div className="text-lg font-medium text-gray-900">
+                                        {loading.cleanupStorage ? 'クリーンアップ中...' : 'ストレージクリーン'}
+                                    </div>
+                                    <div className="text-sm text-gray-500">30日以上古いファイルを削除</div>
+                                </div>
+                            </button>
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
+            {/* ファイルアップロードモーダル */}
+            {showUploadModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">DMARCレポートファイルアップロード</h2>
+                            <button 
+                                onClick={() => {
+                                    setShowUploadModal(false);
+                                    clearFiles();
+                                }}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        
+                        {/* ドラッグ&ドロップエリア */}
+                        <div 
+                            className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-colors ${
+                                dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300'
+                            }`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                        >
+                            <div className="text-gray-600 mb-4">
+                                <div className="text-lg font-medium mb-2">ファイルをドラッグ&ドロップ</div>
+                                <div className="text-sm">または</div>
+                            </div>
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                ファイルを選択
+                            </button>
+                            <input 
+                                ref={fileInputRef}
+                                type="file" 
+                                multiple 
+                                accept=".xml"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                            />
+                        </div>
+                        
+                        {/* 選択されたファイル一覧 */}
+                        {selectedFiles.length > 0 && (
+                            <div className="mb-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-medium">選択されたファイル ({selectedFiles.length})</h3>
+                                    <button 
+                                        onClick={clearFiles}
+                                        className="text-red-500 text-sm hover:text-red-700"
+                                    >
+                                        すべて削除
+                                    </button>
+                                </div>
+                                <div className="max-h-40 overflow-y-auto">
+                                    {selectedFiles.map((file, index) => (
+                                        <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded mb-1">
+                                            <span className="text-sm">{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
+                                            <button 
+                                                onClick={() => removeFile(index)}
+                                                className="text-red-500 hover:text-red-700"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* アクションボタン */}
+                        <div className="flex justify-end gap-2">
+                            <button 
+                                onClick={() => {
+                                    setShowUploadModal(false);
+                                    clearFiles();
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                            >
+                                キャンセル
+                            </button>
+                            <button 
+                                onClick={handleUploadReports}
+                                disabled={selectedFiles.length === 0 || loading.uploadReports}
+                                className={`px-4 py-2 rounded ${
+                                    selectedFiles.length === 0 || loading.uploadReports
+                                        ? 'bg-gray-300 cursor-not-allowed'
+                                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                                }`}
+                            >
+                                {loading.uploadReports ? 'アップロード中...' : 'アップロード'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ログ確認モーダル */}
             {showLogModal && (

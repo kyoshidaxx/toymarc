@@ -75,6 +75,66 @@ class SettingsController extends Controller
     }
 
     /**
+     * Upload and import DMARC report files.
+     */
+    public function uploadReports(Request $request)
+    {
+        try {
+            $request->validate([
+                'files.*' => 'required|file|mimes:xml|max:10240', // 10MB max per file
+            ]);
+
+            $uploadedFiles = $request->file('files');
+            $uploadedCount = 0;
+            $importedCount = 0;
+            $errors = [];
+
+            foreach ($uploadedFiles as $file) {
+                try {
+                    // ファイルをdmarcディスクに保存
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $path = Storage::disk('dmarc')->putFileAs('', $file, $filename);
+                    
+                    if ($path) {
+                        $uploadedCount++;
+                        
+                        // 個別にファイルをインポート
+                        try {
+                            $importService = app(DmarcReportImportService::class);
+                            $importService->importSingleReport($path);
+                            $importedCount++;
+                        } catch (\Exception $e) {
+                            $errors[] = $file->getClientOriginalName() . ' (インポートエラー): ' . $e->getMessage();
+                        }
+                    } else {
+                        $errors[] = $file->getClientOriginalName() . ': ファイルの保存に失敗しました';
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = $file->getClientOriginalName() . ': ' . $e->getMessage();
+                }
+            }
+
+            // 結果メッセージを作成
+            if ($uploadedCount > 0) {
+                $message = "{$uploadedCount}個のファイルをアップロードし、{$importedCount}個のレポートをインポートしました";
+                if (count($errors) > 0) {
+                    $message .= "（" . count($errors) . "個のエラー）";
+                }
+                
+                if (count($errors) > 0) {
+                    return back()->with('success', $message)->withErrors(['details' => $errors]);
+                } else {
+                    return back()->with('success', $message);
+                }
+            } else {
+                return back()->withErrors(['error' => 'ファイルのアップロードに失敗しました']);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Clear application cache.
      */
     public function clearCache()
@@ -85,6 +145,33 @@ class SettingsController extends Controller
             Artisan::call('view:clear');
             
             return back()->with('success', 'キャッシュがクリアされました');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Clean up storage by removing old files.
+     */
+    public function cleanupStorage()
+    {
+        try {
+            $importService = app(DmarcReportImportService::class);
+            $results = $importService->cleanupStorage();
+            
+            $message = "ストレージクリーンアップが完了しました。";
+            if ($results['deleted_files'] > 0) {
+                $deletedSizeMB = round($results['deleted_size'] / (1024 * 1024), 2);
+                $message .= " {$results['deleted_files']} 個のファイル（{$deletedSizeMB} MB）を削除しました。";
+            } else {
+                $message .= " 削除対象のファイルはありませんでした。";
+            }
+            
+            if (count($results['errors']) > 0) {
+                return back()->with('success', $message)->withErrors(['details' => $results['errors']]);
+            } else {
+                return back()->with('success', $message);
+            }
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
         }

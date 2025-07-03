@@ -1,7 +1,6 @@
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head, usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -9,14 +8,6 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 export default function Dashboard({ statistics, recentActivity, auth }) {
     const { auth: pageAuth } = usePage();
     
-    // デバッグ用：認証データをコンソールに出力
-    useEffect(() => {
-        console.log('Dashboard - Page auth prop:', auth);
-        console.log('Dashboard - usePage auth:', pageAuth);
-        console.log('Dashboard - Auth user:', auth?.user || pageAuth?.user);
-        console.log('Dashboard - Page props:', { statistics, recentActivity });
-    }, [auth, pageAuth, statistics, recentActivity]);
-
     // 認証データの優先順位：明示的に渡されたデータ > usePageのデータ
     const authData = auth || pageAuth;
 

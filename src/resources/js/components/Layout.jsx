@@ -1,16 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 export default function Layout({ children, auth: propAuth }) {
     const { url, auth: pageAuth } = usePage();
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     
-    // デバッグ用：認証データをコンソールに出力
-    useEffect(() => {
-        console.log('Layout - Prop auth:', propAuth);
-        console.log('Layout - Page auth:', pageAuth);
-        console.log('Layout - Final auth:', propAuth || pageAuth);
-    }, [propAuth, pageAuth]);
+
     
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: '📊' },

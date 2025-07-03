@@ -46,10 +46,10 @@ docker-compose exec app cp .env.example .env
 docker-compose exec app php artisan key:generate
 ```
 
-6. マイグレーションを実行：
+6. マイグレーションとシードを実行：
 
 ```bash
-docker-compose exec app php artisan migrate
+docker-compose exec app php artisan migrate --seed
 ```
 
 7. フロントエンドをビルド：
@@ -57,6 +57,12 @@ docker-compose exec app php artisan migrate
 ```bash
 cd src && npm run build
 ```
+
+**初期ユーザーのアクセス情報**（DatabaseSeeder 設定より）：
+
+- **メールアドレス**: `test@example.com`
+- **パスワード**: `password`（UserFactory のデフォルト）
+- **メール認証**: 済み（`email_verified_at`が設定済み）
 
 ### 手動セットアップ（詳細）
 
@@ -96,10 +102,10 @@ docker-compose exec app php artisan key:generate
 docker-compose exec app chmod -R 777 storage bootstrap/cache
 ```
 
-7. **マイグレーションを実行**：
+7. **マイグレーションとシードを実行**：
 
 ```bash
-docker-compose exec app php artisan migrate
+docker-compose exec app php artisan migrate --seed
 ```
 
 8. **フロントエンドをビルド**：
@@ -107,6 +113,12 @@ docker-compose exec app php artisan migrate
 ```bash
 cd src && npm run build
 ```
+
+**初期ユーザーのアクセス情報**（DatabaseSeeder 設定より）：
+
+- **メールアドレス**: `test@example.com`
+- **パスワード**: `password`（UserFactory のデフォルト）
+- **メール認証**: 済み（`email_verified_at`が設定済み）
 
 ## 📊 アプリケーションの使い方
 
@@ -246,22 +258,25 @@ docker-compose exec app php artisan [command]
 
 ### Laravel コマンド
 
-```bash
+````bash
 # Artisanコマンド実行
 docker-compose exec app php artisan [command]
 
 # Composerコマンド実行
 docker-compose exec app composer [command]
 
-# マイグレーション実行
-docker-compose exec app php artisan migrate
+# マイグレーションとシード実行
+docker-compose exec app php artisan migrate --seed
 
 # キャッシュクリア
 docker-compose exec app php artisan cache:clear
 
 # DMARCレポートインポート
 docker-compose exec app php artisan dmarc:import [file_path]
-```
+
+# 初期ユーザー作成（DatabaseSeeder使用）
+docker-compose exec app php artisan db:seed
+# アクセス情報: メールアドレス = 'test@example.com', パスワード = 'password'
 
 ### フロントエンドコマンド
 
@@ -274,7 +289,7 @@ npm run build
 
 # 依存関係インストール
 npm install
-```
+````
 
 ## 🗂️ プロジェクト構造
 

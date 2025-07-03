@@ -21,7 +21,7 @@ class AnalyticsController extends Controller
 
         $analytics = Cache::remember("analytics_{$startDate}_{$endDate}", 300, function () use ($startDate, $endDate) {
             // 日別統計
-            $dailyStats = DmarcReport::selectRaw('
+            $dailyStats = DmarcReport::query()->selectRaw('
                 DATE(begin_date) as date,
                 COUNT(*) as reports_count,
                 SUM((SELECT SUM(count) FROM dmarc_records WHERE dmarc_records.dmarc_report_id = dmarc_reports.id)) as emails_count
@@ -32,7 +32,7 @@ class AnalyticsController extends Controller
             ->get();
 
             // 認証結果別統計
-            $authStats = DmarcRecord::selectRaw('
+            $authStats = DmarcRecord::query()->selectRaw('
                 SUM(CASE WHEN dkim_aligned = 1 AND spf_aligned = 1 THEN count ELSE 0 END) as both_success,
                 SUM(CASE WHEN dkim_aligned = 1 AND spf_aligned = 0 THEN count ELSE 0 END) as dkim_only,
                 SUM(CASE WHEN dkim_aligned = 0 AND spf_aligned = 1 THEN count ELSE 0 END) as spf_only,
@@ -44,7 +44,7 @@ class AnalyticsController extends Controller
             ->first();
 
             // 送信元IP別統計（上位10件）
-            $topSourceIps = DmarcRecord::selectRaw('
+            $topSourceIps = DmarcRecord::query()->selectRaw('
                 source_ip,
                 SUM(count) as total_emails,
                 SUM(CASE WHEN dkim_aligned = 1 OR spf_aligned = 1 THEN count ELSE 0 END) as success_emails
@@ -64,7 +64,7 @@ class AnalyticsController extends Controller
             });
 
             // 組織別統計
-            $orgStats = DmarcReport::selectRaw('
+            $orgStats = DmarcReport::query()->selectRaw('
                 org_name,
                 COUNT(*) as reports_count,
                 SUM((SELECT SUM(count) FROM dmarc_records WHERE dmarc_records.dmarc_report_id = dmarc_reports.id)) as emails_count
@@ -76,7 +76,7 @@ class AnalyticsController extends Controller
             ->get();
 
             // ポリシー別統計
-            $policyStats = DmarcReport::selectRaw('
+            $policyStats = DmarcReport::query()->selectRaw('
                 policy_p,
                 COUNT(*) as reports_count,
                 SUM((SELECT SUM(count) FROM dmarc_records WHERE dmarc_records.dmarc_report_id = dmarc_reports.id)) as emails_count

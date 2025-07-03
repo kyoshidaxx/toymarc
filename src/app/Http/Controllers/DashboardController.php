@@ -17,12 +17,12 @@ class DashboardController extends Controller
     public function index(): Response
     {
         $statistics = Cache::remember('dashboard_statistics', 300, function () {
-            $totalReports = DmarcReport::count();
-            $totalRecords = DmarcRecord::count();
-            $totalEmails = DmarcRecord::sum('count');
+            $totalReports = DmarcReport::query()->count();
+            $totalRecords = DmarcRecord::query()->count();
+            $totalEmails = DmarcRecord::query()->sum('count');
             
             // 認証成功率
-            $authSuccessCount = DmarcRecord::where(function ($query) {
+            $authSuccessCount = DmarcRecord::query()->where(function ($query) {
                 $query->where('dkim_aligned', true)
                       ->orWhere('spf_aligned', true);
             })->sum('count');
@@ -31,19 +31,19 @@ class DashboardController extends Controller
             
             // 最近30日間の統計
             $thirtyDaysAgo = now()->subDays(30);
-            $recentReports = DmarcReport::where('begin_date', '>=', $thirtyDaysAgo)->count();
-            $recentEmails = DmarcRecord::whereHas('dmarcReport', function ($query) use ($thirtyDaysAgo) {
+            $recentReports = DmarcReport::query()->where('begin_date', '>=', $thirtyDaysAgo)->count();
+            $recentEmails = DmarcRecord::query()->whereHas('dmarcReport', function ($query) use ($thirtyDaysAgo) {
                 $query->where('begin_date', '>=', $thirtyDaysAgo);
             })->sum('count');
             
             // ポリシー別統計
-            $policyBreakdown = DmarcReport::selectRaw('policy_p, COUNT(*) as count')
+            $policyBreakdown = DmarcReport::query()->selectRaw('policy_p, COUNT(*) as count')
                 ->groupBy('policy_p')
                 ->pluck('count', 'policy_p')
                 ->toArray();
             
             // 組織別統計（上位5件）
-            $topOrganizations = DmarcReport::selectRaw('org_name, COUNT(*) as report_count')
+            $topOrganizations = DmarcReport::query()->selectRaw('org_name, COUNT(*) as report_count')
                 ->groupBy('org_name')
                 ->orderByDesc('report_count')
                 ->limit(5)
@@ -62,7 +62,7 @@ class DashboardController extends Controller
         });
 
         $recentActivity = Cache::remember('dashboard_recent_activity', 60, function () {
-            return DmarcReport::with('records')
+            return DmarcReport::query()->with('records')
                 ->orderBy('created_at', 'desc')
                 ->limit(10)
                 ->get()

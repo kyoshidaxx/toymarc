@@ -88,7 +88,7 @@ class DmarcReportImportService
         $fileHash = hash('sha256', $content);
 
         // Check if report already exists
-        if (DmarcReport::where('file_hash', $fileHash)->exists()) {
+        if (DmarcReport::query()->where('file_hash', $fileHash)->exists()) {
             Log::info('DMARCレポートは既に取り込み済みです', [
                 'file' => $filePath,
                 'hash' => $fileHash,
@@ -133,7 +133,7 @@ class DmarcReportImportService
      */
     private function isDuplicateReport(DmarcReport $report): bool
     {
-        return DmarcReport::where('report_id', $report->report_id)
+        return DmarcReport::query()->where('report_id', $report->report_id)
             ->where('org_name', $report->org_name)
             ->where('begin_date', $report->begin_date)
             ->where('end_date', $report->end_date)
@@ -169,11 +169,11 @@ class DmarcReportImportService
      */
     public function getImportStatistics(): array
     {
-        $totalReports = DmarcReport::count();
-        $totalRecords = DmarcRecord::count();
-        $totalEmails = DmarcRecord::sum('count');
+        $totalReports = DmarcReport::query()->count();
+        $totalRecords = DmarcRecord::query()->count();
+        $totalEmails = DmarcRecord::query()->sum('count');
         
-        $authSuccessCount = DmarcRecord::where('dkim_aligned', true)
+        $authSuccessCount = DmarcRecord::query()->where('dkim_aligned', true)
             ->orWhere('spf_aligned', true)
             ->sum('count');
 

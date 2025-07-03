@@ -170,7 +170,7 @@ class DmarcReportController extends Controller
                     'reject' => $reports->where('policy_p', 'reject')->count(),
                 ];
 
-                $topSourceIps = DmarcRecord::select('source_ip')
+                $topSourceIps = DmarcRecord::query()->select('source_ip')
                     ->selectRaw('SUM(count) as total_count')
                     ->selectRaw('SUM(CASE WHEN dkim_aligned = 1 OR spf_aligned = 1 THEN count ELSE 0 END) as success_count')
                     ->when($request->filled('start_date') && $request->filled('end_date'), function ($query) use ($request) {
@@ -241,7 +241,7 @@ class DmarcReportController extends Controller
         }
 
         try {
-            $query = DmarcRecord::with('dmarcReport');
+            $query = DmarcRecord::query()->with('dmarcReport');
 
             // Apply filters
             if ($request->filled('source_ip')) {
@@ -308,9 +308,9 @@ class DmarcReportController extends Controller
         try {
             $options = Cache::remember('dmarc_filter_options', 3600, function () {
                 return [
-                    'organizations' => DmarcReport::distinct()->pluck('org_name')->filter()->values(),
-                    'policy_domains' => DmarcReport::distinct()->pluck('policy_domain')->filter()->values(),
-                    'dispositions' => DmarcRecord::distinct()->pluck('disposition')->filter()->values(),
+                    'organizations' => DmarcReport::query()->distinct()->pluck('org_name')->filter()->values(),
+                    'policy_domains' => DmarcReport::query()->distinct()->pluck('policy_domain')->filter()->values(),
+                    'dispositions' => DmarcRecord::query()->distinct()->pluck('disposition')->filter()->values(),
                     'auth_results' => ['success', 'failure'],
                 ];
             });

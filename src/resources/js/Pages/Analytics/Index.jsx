@@ -27,11 +27,11 @@ export default function Analytics({ analytics }) {
 
     // 認証結果データ
     const authData = [
-        { name: 'DKIM+SPF成功', value: analytics.authStats.both_success },
-        { name: 'DKIMのみ成功', value: analytics.authStats.dkim_only },
-        { name: 'SPFのみ成功', value: analytics.authStats.spf_only },
-        { name: '両方失敗', value: analytics.authStats.both_failed },
-    ];
+        { name: 'DKIM+SPF成功', value: parseInt(analytics.authStats.both_success) || 0 },
+        { name: 'DKIMのみ成功', value: parseInt(analytics.authStats.dkim_only) || 0 },
+        { name: 'SPFのみ成功', value: parseInt(analytics.authStats.spf_only) || 0 },
+        { name: '両方失敗', value: parseInt(analytics.authStats.both_failed) || 0 },
+    ].filter(item => item.value > 0); // 値が0より大きいもののみ表示
 
     // 日別統計データ
     const dailyData = analytics.dailyStats.map(stat => ({

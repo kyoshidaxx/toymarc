@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Storage;
+use App\Services\DmarcReportImportService;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 
 class SettingsController extends Controller
 {
@@ -49,6 +52,122 @@ class SettingsController extends Controller
             'settings' => $settings,
             'storageInfo' => $storageInfo,
         ]);
+    }
+
+    /**
+     * Import DMARC reports.
+     */
+    public function importReports(Request $request)
+    {
+        try {
+            // Artisanコマンドを実行
+            $exitCode = Artisan::call('dmarc:import');
+            
+            if ($exitCode === 0) {
+                $output = Artisan::output();
+                return back()->with('success', 'レポートの取り込みが完了しました');
+            } else {
+                return back()->withErrors(['error' => 'レポートの取り込みに失敗しました: ' . Artisan::output()]);
+            }
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Clear application cache.
+     */
+    public function clearCache()
+    {
+        try {
+            Artisan::call('cache:clear');
+            Artisan::call('config:clear');
+            Artisan::call('view:clear');
+            
+            return back()->with('success', 'キャッシュがクリアされました');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'エラーが発生しました: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Get application logs.
+     */
+    public function getLogs(Request $request)
+    {
+        try {
+            $logFile = $request->get('file', 'laravel.log');
+            $lines = $request->get('lines', 100);
+            
+            $logPath = storage_path('logs/' . $logFile);
+            
+            if (!File::exists($logPath)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ログファイルが見つかりません: ' . $logFile
+                ], 404);
+            }
+            
+            // ログファイルの最後のN行を取得
+            $content = File::get($logPath);
+            $lines_array = explode("\n", $content);
+            $last_lines = array_slice($lines_array, -$lines);
+            $log_content = implode("\n", $last_lines);
+            
+            // ログファイルの基本情報
+            $fileInfo = [
+                'name' => $logFile,
+                'size' => $this->formatBytes(File::size($logPath)),
+                'modified' => date('Y-m-d H:i:s', File::lastModified($logPath)),
+                'total_lines' => count($lines_array),
+                'displayed_lines' => count($last_lines),
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'content' => $log_content,
+                    'file_info' => $fileInfo,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ログの読み込みに失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available log files.
+     */
+    public function getLogFiles()
+    {
+        try {
+            $logPath = storage_path('logs');
+            $files = File::files($logPath);
+            
+            $logFiles = [];
+            foreach ($files as $file) {
+                $logFiles[] = [
+                    'name' => $file->getFilename(),
+                    'size' => $this->formatBytes($file->getSize()),
+                    'modified' => date('Y-m-d H:i:s', $file->getMTime()),
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $logFiles
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ログファイル一覧の取得に失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

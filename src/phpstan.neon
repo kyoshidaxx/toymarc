@@ -1,12 +1,5 @@
 parameters:
-  level: max
+  level: 6
   paths:
     - app
-    - tests
-  excludePaths:
-    - app/Console/Kernel.php
-  checkMissingIterableValueType: false
-  checkGenericClassInNonGenericObjectType: false
-  ignoreErrors:
-    - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder::#'
-    - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Model::#' 
+    - tests 

@@ -1,0 +1,9 @@
+{
+	order php_server before file_server
+}
+
+:80 {
+	root * public
+	php_server
+	try_files {path} {path}/ /index.php?{query}
+} 

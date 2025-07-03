@@ -22,7 +22,12 @@ class DmarcReportParserService
     {
         try {
             $xml = new SimpleXMLElement($xmlContent);
-            $xml->registerXPathNamespace('dmarc', 'http://dmarc.org/dmarc-xml/1.0');
+            
+            // 名前空間の確認とデバッグ
+            $namespaces = $xml->getNamespaces();
+            if (!empty($namespaces)) {
+                $xml->registerXPathNamespace('dmarc', 'http://dmarc.org/dmarc-xml/1.0');
+            }
 
             // Parse report metadata
             $metadata = $this->parseReportMetadata($xml);
@@ -43,7 +48,7 @@ class DmarcReportParserService
                 'policy_domain' => $policy['domain'],
                 'policy_p' => $policy['p'],
                 'policy_pct' => $policy['pct'],
-                'raw_data' => json_decode($xmlContent, true),
+                'raw_data' => json_encode((array)$xml),
             ]);
 
             // Set records relationship
@@ -64,22 +69,22 @@ class DmarcReportParserService
      */
     private function parseReportMetadata(SimpleXMLElement $xml): array
     {
-        $metadata = $xml->xpath('//dmarc:report_metadata')[0] ?? null;
+        $metadata = $xml->xpath('/*[local-name()="feedback"]/*[local-name()="report_metadata"]')[0] ?? null;
         if (!$metadata) {
             throw new DmarcReportParseException('レポートメタデータが見つかりません');
         }
 
-        $dateRange = $metadata->xpath('.//dmarc:date_range')[0] ?? null;
+        $dateRange = $metadata->xpath('./*[local-name()="date_range"]')[0] ?? null;
         if (!$dateRange) {
             throw new DmarcReportParseException('日付範囲が見つかりません');
         }
 
         return [
-            'org_name' => (string) ($metadata->xpath('.//dmarc:org_name')[0] ?? ''),
-            'email' => (string) ($metadata->xpath('.//dmarc:email')[0] ?? ''),
-            'report_id' => (string) ($metadata->xpath('.//dmarc:report_id')[0] ?? ''),
-            'begin_date' => date('Y-m-d H:i:s', (int) ($dateRange->xpath('.//dmarc:begin')[0] ?? 0)),
-            'end_date' => date('Y-m-d H:i:s', (int) ($dateRange->xpath('.//dmarc:end')[0] ?? 0)),
+            'org_name' => (string) ($metadata->xpath('./*[local-name()="org_name"]')[0] ?? ''),
+            'email' => (string) ($metadata->xpath('./*[local-name()="email"]')[0] ?? ''),
+            'report_id' => (string) ($metadata->xpath('./*[local-name()="report_id"]')[0] ?? ''),
+            'begin_date' => date('Y-m-d H:i:s', (int) ($dateRange->xpath('./*[local-name()="begin"]')[0] ?? 0)),
+            'end_date' => date('Y-m-d H:i:s', (int) ($dateRange->xpath('./*[local-name()="end"]')[0] ?? 0)),
         ];
     }
 
@@ -88,15 +93,15 @@ class DmarcReportParserService
      */
     private function parsePolicyPublished(SimpleXMLElement $xml): array
     {
-        $policy = $xml->xpath('//dmarc:policy_published')[0] ?? null;
+        $policy = $xml->xpath('/*[local-name()="feedback"]/*[local-name()="policy_published"]')[0] ?? null;
         if (!$policy) {
             throw new DmarcReportParseException('ポリシー情報が見つかりません');
         }
 
         return [
-            'domain' => (string) ($policy->xpath('.//dmarc:domain')[0] ?? ''),
-            'p' => (string) ($policy->xpath('.//dmarc:p')[0] ?? 'none'),
-            'pct' => (int) ($policy->xpath('.//dmarc:pct')[0] ?? 100),
+            'domain' => (string) ($policy->xpath('./*[local-name()="domain"]')[0] ?? ''),
+            'p' => (string) ($policy->xpath('./*[local-name()="p"]')[0] ?? 'none'),
+            'pct' => (int) ($policy->xpath('./*[local-name()="pct"]')[0] ?? 100),
         ];
     }
 
@@ -106,22 +111,22 @@ class DmarcReportParserService
     private function parseRecords(SimpleXMLElement $xml): array
     {
         $records = [];
-        $recordNodes = $xml->xpath('//dmarc:record');
+        $recordNodes = $xml->xpath('/*[local-name()="feedback"]/*[local-name()="record"]');
 
         foreach ($recordNodes as $recordNode) {
-            $row = $recordNode->xpath('.//dmarc:row')[0] ?? null;
-            $policyEvaluated = $recordNode->xpath('.//dmarc:policy_evaluated')[0] ?? null;
-            $identifiers = $recordNode->xpath('.//dmarc:identifiers')[0] ?? null;
-            $authResults = $recordNode->xpath('.//dmarc:auth_results')[0] ?? null;
+            $row = $recordNode->xpath('./*[local-name()="row"]')[0] ?? null;
+            $policyEvaluated = $recordNode->xpath('./*[local-name()="policy_evaluated"]')[0] ?? null;
+            $identifiers = $recordNode->xpath('./*[local-name()="identifiers"]')[0] ?? null;
+            $authResults = $recordNode->xpath('./*[local-name()="auth_results"]')[0] ?? null;
 
             if (!$row || !$policyEvaluated || !$identifiers || !$authResults) {
                 continue;
             }
 
             $records[] = new DmarcRecord([
-                'source_ip' => (string) ($row->xpath('.//dmarc:source_ip')[0] ?? ''),
-                'count' => (int) ($row->xpath('.//dmarc:count')[0] ?? 0),
-                'disposition' => (string) ($policyEvaluated->xpath('.//dmarc:disposition')[0] ?? ''),
+                'source_ip' => (string) ($row->xpath('./*[local-name()="source_ip"]')[0] ?? ''),
+                'count' => (int) ($row->xpath('./*[local-name()="count"]')[0] ?? 0),
+                'disposition' => (string) ($policyEvaluated->xpath('./*[local-name()="disposition"]')[0] ?? ''),
                 'dkim_aligned' => $this->isDkimAligned($authResults),
                 'dkim_result' => $this->getDkimResult($authResults),
                 'spf_aligned' => $this->isSpfAligned($authResults),
@@ -137,9 +142,9 @@ class DmarcReportParserService
      */
     private function isDkimAligned(SimpleXMLElement $authResults): bool
     {
-        $dkimResults = $authResults->xpath('.//dmarc:dkim');
+        $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
         foreach ($dkimResults as $dkim) {
-            $result = (string) ($dkim->xpath('.//dmarc:result')[0] ?? '');
+            $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
             if ($result === 'pass') {
                 return true;
             }
@@ -152,9 +157,9 @@ class DmarcReportParserService
      */
     private function getDkimResult(SimpleXMLElement $authResults): string
     {
-        $dkimResults = $authResults->xpath('.//dmarc:dkim');
+        $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
         foreach ($dkimResults as $dkim) {
-            $result = (string) ($dkim->xpath('.//dmarc:result')[0] ?? '');
+            $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
             if ($result === 'pass') {
                 return 'pass';
             }
@@ -167,9 +172,9 @@ class DmarcReportParserService
      */
     private function isSpfAligned(SimpleXMLElement $authResults): bool
     {
-        $spfResults = $authResults->xpath('.//dmarc:spf');
+        $spfResults = $authResults->xpath('./*[local-name()="spf"]');
         foreach ($spfResults as $spf) {
-            $result = (string) ($spf->xpath('.//dmarc:result')[0] ?? '');
+            $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
             if ($result === 'pass') {
                 return true;
             }
@@ -182,9 +187,9 @@ class DmarcReportParserService
      */
     private function getSpfResult(SimpleXMLElement $authResults): string
     {
-        $spfResults = $authResults->xpath('.//dmarc:spf');
+        $spfResults = $authResults->xpath('./*[local-name()="spf"]');
         foreach ($spfResults as $spf) {
-            $result = (string) ($spf->xpath('.//dmarc:result')[0] ?? '');
+            $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
             if ($result === 'pass') {
                 return 'pass';
             }

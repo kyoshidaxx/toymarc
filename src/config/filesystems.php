@@ -60,6 +60,14 @@ return [
             'report' => false,
         ],
 
+        'dmarc' => [
+            'driver' => 'local',
+            'root' => storage_path('app/dmarc_reports'),
+            'serve' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

@@ -62,12 +62,12 @@ class ImportDmarcReportsCommand extends Command
     {
         $this->info('ドライラン実行中...');
 
-        if (!Storage::exists($directory)) {
+        if (!Storage::disk('dmarc')->exists($directory)) {
             $this->error("ディレクトリが存在しません: {$directory}");
             return;
         }
 
-        $files = Storage::files($directory);
+        $files = Storage::disk('dmarc')->files($directory);
         $xmlFiles = array_filter($files, function ($file) {
             return pathinfo($file, PATHINFO_EXTENSION) === 'xml';
         });
@@ -82,7 +82,8 @@ class ImportDmarcReportsCommand extends Command
         $this->table(
             ['ファイル名', 'サイズ', '最終更新日'],
             array_map(function ($file) {
-                $stats = Storage::stat($file);
+                $filePath = Storage::disk('dmarc')->path($file);
+                $stats = stat($filePath);
                 return [
                     basename($file),
                     $this->formatBytes($stats['size']),

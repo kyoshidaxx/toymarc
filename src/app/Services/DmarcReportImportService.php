@@ -36,11 +36,11 @@ class DmarcReportImportService
             'directory' => $directory,
         ]);
 
-        if (!Storage::exists($directory)) {
+        if (!Storage::disk('dmarc')->exists($directory)) {
             throw new DmarcReportImportException("ディレクトリが存在しません: {$directory}");
         }
 
-        $files = Storage::files($directory);
+        $files = Storage::disk('dmarc')->files($directory);
         $xmlFiles = array_filter($files, function ($file) {
             return pathinfo($file, PATHINFO_EXTENSION) === 'xml';
         });
@@ -80,7 +80,7 @@ class DmarcReportImportService
      */
     private function importSingleReport(string $filePath): void
     {
-        $content = Storage::get($filePath);
+        $content = Storage::disk('dmarc')->get($filePath);
         if ($content === false) {
             throw new DmarcReportImportException("ファイルの読み込みに失敗しました: {$filePath}");
         }

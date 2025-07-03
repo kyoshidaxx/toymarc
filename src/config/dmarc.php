@@ -12,7 +12,7 @@ return [
     |
     */
 
-    'reports_directory' => env('DMARC_REPORTS_DIRECTORY', 'dmarc_reports'),
+    'reports_directory' => env('DMARC_REPORTS_DIRECTORY', ''),
 
     /*
     |--------------------------------------------------------------------------

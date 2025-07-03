@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -80,9 +81,20 @@ class DashboardController extends Controller
                 });
         });
 
+        // 認証データを明示的に取得
+        $user = Auth::user();
+        $authData = [
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ] : null,
+        ];
+
         return Inertia::render('Dashboard/Index', [
             'statistics' => $statistics,
             'recentActivity' => $recentActivity,
+            'auth' => $authData, // 明示的に認証データを渡す
         ]);
     }
 } 

@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -29,11 +31,37 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return [
+        $user = $request->user();
+        
+        // デバッグ用：認証情報をログに出力
+        Log::info('HandleInertiaRequests - User:', [
+            'user' => $user ? $user->toArray() : null,
+            'authenticated' => Auth::check(),
+            'session_id' => $request->session()->getId(),
+        ]);
+
+        $shared = [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ] : null,
+            ],
+            'flash' => [
+                'message' => fn () => $request->session()->get('message'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ];
+
+        // デバッグ用：共有データをログに出力
+        Log::info('HandleInertiaRequests - Shared data:', [
+            'auth' => $shared['auth'],
+            'url' => $shared['url'] ?? null,
+        ]);
+
+        return $shared;
     }
 }

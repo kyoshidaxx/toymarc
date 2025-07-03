@@ -1,9 +1,16 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function Layout({ children }) {
-    const { url, auth } = usePage();
+export default function Layout({ children, auth: propAuth }) {
+    const { url, auth: pageAuth } = usePage();
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+    
+    // デバッグ用：認証データをコンソールに出力
+    useEffect(() => {
+        console.log('Layout - Prop auth:', propAuth);
+        console.log('Layout - Page auth:', pageAuth);
+        console.log('Layout - Final auth:', propAuth || pageAuth);
+    }, [propAuth, pageAuth]);
     
     const navigation = [
         { name: 'Dashboard', href: '/dashboard', icon: '📊' },
@@ -11,6 +18,10 @@ export default function Layout({ children }) {
         { name: 'Analytics', href: '/analytics', icon: '📈' },
         { name: 'Settings', href: '/settings', icon: '⚙️' },
     ];
+
+    // 認証データの優先順位：明示的に渡されたデータ > usePageのデータ
+    const auth = propAuth || pageAuth;
+    const user = auth?.user || { name: 'User', email: 'user@example.com' };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -59,9 +70,9 @@ export default function Layout({ children }) {
                                     className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
                                 >
                                     <span className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                                        {auth.user.name.charAt(0).toUpperCase()}
+                                        {user.name.charAt(0).toUpperCase()}
                                     </span>
-                                    <span className="hidden lg:block">{auth.user.name}</span>
+                                    <span className="hidden lg:block">{user.name}</span>
                                     <svg
                                         className={`w-4 h-4 transition-transform flex-shrink-0 ${
                                             showingNavigationDropdown ? 'rotate-180' : ''
@@ -146,11 +157,11 @@ export default function Layout({ children }) {
                                 <div className="px-4">
                                     <div className="flex items-center space-x-3">
                                         <span className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                                            {auth.user.name.charAt(0).toUpperCase()}
+                                            {user.name.charAt(0).toUpperCase()}
                                         </span>
                                         <div>
-                                            <div className="text-base font-medium text-gray-800">{auth.user.name}</div>
-                                            <div className="text-sm font-medium text-gray-500">{auth.user.email}</div>
+                                            <div className="text-base font-medium text-gray-800">{user.name}</div>
+                                            <div className="text-sm font-medium text-gray-500">{user.email}</div>
                                         </div>
                                     </div>
                                 </div>

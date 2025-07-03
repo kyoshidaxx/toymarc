@@ -1,12 +1,25 @@
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Head } from '@inertiajs/react';
-import React from 'react';
+import { Head, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-export default function Dashboard({ statistics, recentActivity }) {
+export default function Dashboard({ statistics, recentActivity, auth }) {
+    const { auth: pageAuth } = usePage();
+    
+    // デバッグ用：認証データをコンソールに出力
+    useEffect(() => {
+        console.log('Dashboard - Page auth prop:', auth);
+        console.log('Dashboard - usePage auth:', pageAuth);
+        console.log('Dashboard - Auth user:', auth?.user || pageAuth?.user);
+        console.log('Dashboard - Page props:', { statistics, recentActivity });
+    }, [auth, pageAuth, statistics, recentActivity]);
+
+    // 認証データの優先順位：明示的に渡されたデータ > usePageのデータ
+    const authData = auth || pageAuth;
+
     const policyData = Object.entries(statistics.policy_breakdown).map(([policy, count]) => ({
         name: policy,
         value: count,
@@ -23,6 +36,22 @@ export default function Dashboard({ statistics, recentActivity }) {
             
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
+                
+                {/* デバッグ情報（開発時のみ表示） */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
+                        <h3 className="font-bold text-yellow-800">デバッグ情報</h3>
+                        <pre className="text-xs text-yellow-700">
+                            Page Auth: {JSON.stringify(auth, null, 2)}
+                        </pre>
+                        <pre className="text-xs text-yellow-700">
+                            usePage Auth: {JSON.stringify(pageAuth, null, 2)}
+                        </pre>
+                        <pre className="text-xs text-yellow-700">
+                            Final Auth: {JSON.stringify(authData, null, 2)}
+                        </pre>
+                    </div>
+                )}
                 
                 {/* 統計カード */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

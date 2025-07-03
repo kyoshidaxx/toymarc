@@ -1,10 +1,11 @@
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Head } from '@inertiajs/react';
 import React from 'react';
 
 export default function Settings({ settings, storageInfo }) {
     return (
-        <>
+        <Layout>
             <Head title="Settings" />
             
             <div className="container mx-auto px-4 py-8">
@@ -181,6 +182,6 @@ export default function Settings({ settings, storageInfo }) {
                     </CardContent>
                 </Card>
             </div>
-        </>
+        </Layout>
     );
 } 

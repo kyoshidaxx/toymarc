@@ -8,7 +8,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.jsx'])
     @inertiaHead
 </head>
-<body class="font-sans antialiased">
-    @inertia
+<body class="font-sans antialiased bg-gray-50">
+    <div id="app" data-page="{{ json_encode($page) }}">
+        @inertia
+    </div>
 </body>
 </html> 

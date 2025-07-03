@@ -28,8 +28,8 @@ export default function Layout({ children }) {
                                 >
                                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
                                 </svg>
-                                <span className="text-xl font-bold text-gray-900 truncate hidden sm:block">DMARC Reports</span>
-                                <span className="text-lg font-bold text-gray-900 truncate sm:hidden">DMARC</span>
+                                <span className="text-xl font-bold text-gray-900 truncate hidden sm:block">toymarc</span>
+                                <span className="text-lg font-bold text-gray-900 truncate sm:hidden">toymarc</span>
                             </Link>
                         </div>
 

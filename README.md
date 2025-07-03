@@ -1,4 +1,4 @@
-# DMARC レポート可視化アプリケーション
+# toymarc
 
 Laravel + FrankenPHP + MySQL Docker 環境で動作する DMARC レポート可視化アプリケーションです。DMARC XML レポートをインポートし、ダッシュボードで分析結果を可視化できます。
 

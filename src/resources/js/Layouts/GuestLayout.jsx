@@ -8,8 +8,8 @@ export default function GuestLayout({ children }) {
                 <Link href="/" className="flex items-center space-x-3">
                     <ApplicationLogo className="h-16 w-16 fill-current text-blue-600" />
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900 hidden sm:block">DMARC Reports</h1>
-                        <h1 className="text-xl font-bold text-gray-900 sm:hidden">DMARC</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 hidden sm:block">toymarc</h1>
+                        <h1 className="text-xl font-bold text-gray-900 sm:hidden">toymarc</h1>
                     </div>
                 </Link>
             </div>

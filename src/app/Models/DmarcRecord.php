@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $spf_aligned
  * @property string $spf_result
  * @property-read DmarcReport $dmarcReport
+ * @method static \Illuminate\Database\Eloquent\Builder selectRaw(string $expression)
  */
 class DmarcRecord extends Model
 {

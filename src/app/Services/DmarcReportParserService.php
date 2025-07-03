@@ -112,7 +112,7 @@ class DmarcReportParserService
     /**
      * Parse records from XML.
      * 
-     * @return array<string, mixed>
+     * @return array<int, \App\Models\DmarcRecord>
      */
     private function parseRecords(\SimpleXMLElement $xml): array
     {

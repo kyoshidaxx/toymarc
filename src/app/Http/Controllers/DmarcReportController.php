@@ -42,20 +42,20 @@ class DmarcReportController extends Controller
 
             // Apply filters
             if ($request->filled('start_date') && $request->filled('end_date')) {
-                $query->byDateRange($request->start_date, $request->end_date);
+                $query->whereBetween('begin_date', [$request->get('start_date'), $request->get('end_date')]);
             }
 
             if ($request->filled('org_name')) {
-                $query->byOrgName($request->org_name);
+                $query->where('org_name', 'like', "%{$request->get('org_name')}%");
             }
 
             if ($request->filled('policy_domain')) {
-                $query->byPolicyDomain($request->policy_domain);
+                $query->where('policy_domain', 'like', "%{$request->get('policy_domain')}%");
             }
 
             // Apply search
             if ($request->filled('search')) {
-                $search = $request->search;
+                $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('org_name', 'like', "%{$search}%")
                       ->orWhere('email', 'like', "%{$search}%")
@@ -149,7 +149,7 @@ class DmarcReportController extends Controller
 
                 // Apply date range filter
                 if ($request->filled('start_date') && $request->filled('end_date')) {
-                    $query->byDateRange($request->start_date, $request->end_date);
+                    $query->whereBetween('begin_date', [$request->get('start_date'), $request->get('end_date')]);
                 }
 
                 $reports = $query->get();
@@ -160,9 +160,9 @@ class DmarcReportController extends Controller
                 });
 
                 $authSuccessCount = $reports->sum(function ($report) {
-                    return $report->records->where('dkim_aligned', true)
-                        ->orWhere('spf_aligned', true)
-                        ->sum('count');
+                    return $report->records->filter(function ($record) {
+                        return $record->dkim_aligned || $record->spf_aligned;
+                    })->sum('count');
                 });
 
                 $authFailureCount = $totalEmails - $authSuccessCount;
@@ -178,7 +178,7 @@ class DmarcReportController extends Controller
                     ->selectRaw('SUM(CASE WHEN dkim_aligned = 1 OR spf_aligned = 1 THEN count ELSE 0 END) as success_count')
                     ->when($request->filled('start_date') && $request->filled('end_date'), function ($query) use ($request) {
                         return $query->whereHas('dmarcReport', function ($q) use ($request) {
-                            $q->byDateRange($request->start_date, $request->end_date);
+                            $q->whereBetween('begin_date', [$request->get('start_date'), $request->get('end_date')]);
                         });
                     })
                     ->groupBy('source_ip')
@@ -248,11 +248,11 @@ class DmarcReportController extends Controller
 
             // Apply filters
             if ($request->filled('source_ip')) {
-                $query->where('source_ip', 'like', "%{$request->source_ip}%");
+                $query->where('source_ip', 'like', "%{$request->get('source_ip')}%");
             }
 
             if ($request->filled('auth_result')) {
-                switch ($request->auth_result) {
+                switch ($request->get('auth_result')) {
                     case 'success':
                         $query->where(function ($q) {
                             $q->where('dkim_aligned', true)->orWhere('spf_aligned', true);
@@ -265,13 +265,13 @@ class DmarcReportController extends Controller
             }
 
             if ($request->filled('disposition')) {
-                $query->where('disposition', $request->disposition);
+                $query->where('disposition', $request->get('disposition'));
             }
 
             // Apply date range filter through relationship
             if ($request->filled('start_date') && $request->filled('end_date')) {
                 $query->whereHas('dmarcReport', function ($q) use ($request) {
-                    $q->byDateRange($request->start_date, $request->end_date);
+                    $q->whereBetween('begin_date', [$request->get('start_date'), $request->get('end_date')]);
                 });
             }
 

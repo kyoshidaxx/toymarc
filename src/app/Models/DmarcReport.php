@@ -23,6 +23,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder byDateRange(string $startDate, string $endDate)
  * @method static \Illuminate\Database\Eloquent\Builder byOrgName(string $orgName)
  * @method static \Illuminate\Database\Eloquent\Builder byPolicyDomain(string $domain)
+ * @method \Illuminate\Database\Eloquent\Builder byDateRange(string $startDate, string $endDate)
+ * @method \Illuminate\Database\Eloquent\Builder byOrgName(string $orgName)
+ * @method \Illuminate\Database\Eloquent\Builder byPolicyDomain(string $domain)
  */
 class DmarcReport extends Model
 {

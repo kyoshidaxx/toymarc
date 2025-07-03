@@ -22,6 +22,8 @@ class DmarcReportImportService
 
     /**
      * Import DMARC reports from directory.
+     * 
+     * @return array<string, mixed>
      */
     public function importReportsFromDirectory(string $directory): array
     {
@@ -142,6 +144,8 @@ class DmarcReportImportService
 
     /**
      * Validate report metadata.
+     * 
+     * @param array<string, mixed> $metadata
      */
     public function validateReportMetadata(array $metadata): bool
     {
@@ -166,6 +170,8 @@ class DmarcReportImportService
 
     /**
      * Get import statistics.
+     * 
+     * @return array<string, mixed>
      */
     public function getImportStatistics(): array
     {

@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * @property Request $request
+ */
 class DmarcReportController extends Controller
 {
     /**

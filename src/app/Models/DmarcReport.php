@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array $raw_data
  * @property string $file_hash
  * @property-read \Illuminate\Database\Eloquent\Collection|DmarcRecord[] $records
+ * @method static \Illuminate\Database\Eloquent\Builder byDateRange(string $startDate, string $endDate)
+ * @method static \Illuminate\Database\Eloquent\Builder byOrgName(string $orgName)
+ * @method static \Illuminate\Database\Eloquent\Builder byPolicyDomain(string $domain)
  */
 class DmarcReport extends Model
 {
@@ -107,6 +110,8 @@ class DmarcReport extends Model
 
     /**
      * Get summary data for dashboard.
+     * 
+     * @return array<string, mixed>
      */
     public static function getSummaryData(): array
     {
@@ -118,9 +123,9 @@ class DmarcReport extends Model
         });
 
         $authSuccessCount = $reports->sum(function ($report) {
-            return $report->records->where('dkim_aligned', true)
-                ->orWhere('spf_aligned', true)
-                ->sum('count');
+            return $report->records->filter(function ($record) {
+                return $record->dkim_aligned || $record->spf_aligned;
+            })->sum('count');
         });
 
         $authFailureCount = $totalEmails - $authSuccessCount;

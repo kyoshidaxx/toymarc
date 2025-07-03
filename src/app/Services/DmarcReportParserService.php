@@ -66,6 +66,8 @@ class DmarcReportParserService
 
     /**
      * Parse report metadata from XML.
+     * 
+     * @return array<string, mixed>
      */
     private function parseReportMetadata(SimpleXMLElement $xml): array
     {
@@ -89,9 +91,11 @@ class DmarcReportParserService
     }
 
     /**
-     * Parse policy published from XML.
+     * Parse policy published information from XML.
+     * 
+     * @return array<string, mixed>
      */
-    private function parsePolicyPublished(SimpleXMLElement $xml): array
+    private function parsePolicyPublished(\SimpleXMLElement $xml): array
     {
         $policy = $xml->xpath('/*[local-name()="feedback"]/*[local-name()="policy_published"]')[0] ?? null;
         if (!$policy) {
@@ -107,8 +111,10 @@ class DmarcReportParserService
 
     /**
      * Parse records from XML.
+     * 
+     * @return array<string, mixed>
      */
-    private function parseRecords(SimpleXMLElement $xml): array
+    private function parseRecords(\SimpleXMLElement $xml): array
     {
         $records = [];
         $recordNodes = $xml->xpath('/*[local-name()="feedback"]/*[local-name()="record"]');

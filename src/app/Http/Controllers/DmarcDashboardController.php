@@ -6,6 +6,7 @@ use App\Models\DmarcReport;
 use App\Services\DmarcReportImportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class DmarcDashboardController extends Controller
 {
@@ -17,7 +18,7 @@ class DmarcDashboardController extends Controller
     /**
      * Display the DMARC dashboard.
      */
-    public function index()
+    public function index(): Response
     {
         $reports = DmarcReport::with('records')
             ->orderBy('begin_date', 'desc')
@@ -53,7 +54,7 @@ class DmarcDashboardController extends Controller
     /**
      * Show a specific DMARC report.
      */
-    public function show(DmarcReport $report)
+    public function show(DmarcReport $report): Response
     {
         $report->load('records');
 

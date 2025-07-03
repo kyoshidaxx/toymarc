@@ -95,6 +95,8 @@ class ImportDmarcReportsCommand extends Command
 
     /**
      * Display import results.
+     * 
+     * @param array<string, mixed> $results
      */
     private function displayResults(array $results): void
     {

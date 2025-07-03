@@ -8,8 +8,17 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./src:/var/www/html
+      - dmarc_reports:/var/www/html/storage/app/dmarc_reports
     ports:
-      - "80:80"
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=toymarc
+      - DB_USERNAME=root
+      - DB_PASSWORD=toymarc_password
+      - APP_LOCALE=ja
+      - APP_FALLBACK_LOCALE=en
+      - APP_TIMEZONE=Asia/Tokyo
     networks:
       - toymarc-network
     depends_on:
@@ -35,4 +44,6 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
+  dmarc_reports:
     driver: local

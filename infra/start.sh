@@ -26,6 +26,14 @@ else
     echo ".env file already exists, skipping setup"
 fi
 
+# フロントエンドビルドの初回セットアップ
+if [ ! -f public/build/manifest.json ]; then
+    echo "Building frontend assets (first time setup)..."
+    npm run build
+else
+    echo "Frontend assets already built, skipping build"
+fi
+
 # マイグレーションを実行
 echo "Running migrations..."
 php artisan migrate --force

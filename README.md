@@ -18,17 +18,7 @@ git clone [repository-url]
 cd toymarc
 ```
 
-2. **環境設定ファイルの準備**：
-
-```bash
-# .env ファイルを作成
-cp src/env.example src/.env
-
-# アプリケーションキーを生成
-docker-compose run --rm app php artisan key:generate
-```
-
-3. Docker コンテナを起動：
+2. Docker コンテナを起動：
 
 ```bash
 docker-compose up -d --build

@@ -16,6 +16,16 @@ try {
 done
 echo "Database is ready!"
 
+# .env ファイルの初回セットアップ
+if [ ! -f .env ]; then
+    echo "Creating .env from env.example (first time setup)..."
+    cp env.example .env
+    echo "Generating application key..."
+    php artisan key:generate
+else
+    echo ".env file already exists, skipping setup"
+fi
+
 # マイグレーションを実行
 echo "Running migrations..."
 php artisan migrate --force

@@ -121,11 +121,11 @@ class DmarcReportParserService
 
         foreach ($recordNodes as $recordNode) {
             $row = $recordNode->xpath('./*[local-name()="row"]')[0] ?? null;
-            $policyEvaluated = $recordNode->xpath('./*[local-name()="policy_evaluated"]')[0] ?? null;
+            $policyEvaluated = $row ? $row->xpath('./*[local-name()="policy_evaluated"]')[0] ?? null : null;
             $identifiers = $recordNode->xpath('./*[local-name()="identifiers"]')[0] ?? null;
             $authResults = $recordNode->xpath('./*[local-name()="auth_results"]')[0] ?? null;
 
-            if (!$row || !$policyEvaluated || !$identifiers || !$authResults) {
+            if (!$row || !$policyEvaluated) {
                 continue;
             }
 
@@ -133,10 +133,10 @@ class DmarcReportParserService
                 'source_ip' => (string) ($row->xpath('./*[local-name()="source_ip"]')[0] ?? ''),
                 'count' => (int) ($row->xpath('./*[local-name()="count"]')[0] ?? 0),
                 'disposition' => (string) ($policyEvaluated->xpath('./*[local-name()="disposition"]')[0] ?? ''),
-                'dkim_aligned' => $this->isDkimAligned($authResults),
-                'dkim_result' => $this->getDkimResult($authResults),
-                'spf_aligned' => $this->isSpfAligned($authResults),
-                'spf_result' => $this->getSpfResult($authResults),
+                'dkim_aligned' => $this->isDkimAligned($policyEvaluated, $authResults),
+                'dkim_result' => $this->getDkimResult($policyEvaluated, $authResults),
+                'spf_aligned' => $this->isSpfAligned($policyEvaluated, $authResults),
+                'spf_result' => $this->getSpfResult($policyEvaluated, $authResults),
             ]);
         }
 
@@ -146,60 +146,100 @@ class DmarcReportParserService
     /**
      * Check if DKIM is aligned.
      */
-    private function isDkimAligned(SimpleXMLElement $authResults): bool
+    private function isDkimAligned(SimpleXMLElement $policyEvaluated, ?SimpleXMLElement $authResults): bool
     {
-        $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
-        foreach ($dkimResults as $dkim) {
-            $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
-            if ($result === 'pass') {
-                return true;
+        // Check policy_evaluated first
+        $policyDkim = (string) ($policyEvaluated->xpath('./*[local-name()="dkim"]')[0] ?? '');
+        if ($policyDkim === 'pass') {
+            return true;
+        }
+
+        // Fallback to auth_results if available
+        if ($authResults) {
+            $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
+            foreach ($dkimResults as $dkim) {
+                $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
+                if ($result === 'pass') {
+                    return true;
+                }
             }
         }
+        
         return false;
     }
 
     /**
      * Get DKIM result.
      */
-    private function getDkimResult(SimpleXMLElement $authResults): string
+    private function getDkimResult(SimpleXMLElement $policyEvaluated, ?SimpleXMLElement $authResults): string
     {
-        $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
-        foreach ($dkimResults as $dkim) {
-            $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
-            if ($result === 'pass') {
-                return 'pass';
+        // Check policy_evaluated first
+        $policyDkim = (string) ($policyEvaluated->xpath('./*[local-name()="dkim"]')[0] ?? '');
+        if (!empty($policyDkim)) {
+            return $policyDkim;
+        }
+
+        // Fallback to auth_results if available
+        if ($authResults) {
+            $dkimResults = $authResults->xpath('./*[local-name()="dkim"]');
+            foreach ($dkimResults as $dkim) {
+                $result = (string) ($dkim->xpath('./*[local-name()="result"]')[0] ?? '');
+                if (!empty($result)) {
+                    return $result;
+                }
             }
         }
+        
         return 'fail';
     }
 
     /**
      * Check if SPF is aligned.
      */
-    private function isSpfAligned(SimpleXMLElement $authResults): bool
+    private function isSpfAligned(SimpleXMLElement $policyEvaluated, ?SimpleXMLElement $authResults): bool
     {
-        $spfResults = $authResults->xpath('./*[local-name()="spf"]');
-        foreach ($spfResults as $spf) {
-            $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
-            if ($result === 'pass') {
-                return true;
+        // Check policy_evaluated first
+        $policySpf = (string) ($policyEvaluated->xpath('./*[local-name()="spf"]')[0] ?? '');
+        if ($policySpf === 'pass') {
+            return true;
+        }
+
+        // Fallback to auth_results if available
+        if ($authResults) {
+            $spfResults = $authResults->xpath('./*[local-name()="spf"]');
+            foreach ($spfResults as $spf) {
+                $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
+                if ($result === 'pass') {
+                    return true;
+                }
             }
         }
+        
         return false;
     }
 
     /**
      * Get SPF result.
      */
-    private function getSpfResult(SimpleXMLElement $authResults): string
+    private function getSpfResult(SimpleXMLElement $policyEvaluated, ?SimpleXMLElement $authResults): string
     {
-        $spfResults = $authResults->xpath('./*[local-name()="spf"]');
-        foreach ($spfResults as $spf) {
-            $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
-            if ($result === 'pass') {
-                return 'pass';
+        // Check policy_evaluated first
+        $policySpf = (string) ($policyEvaluated->xpath('./*[local-name()="spf"]')[0] ?? '');
+        if (!empty($policySpf)) {
+            return $policySpf;
+        }
+
+        // Fallback to auth_results if available
+        if ($authResults) {
+            $spfResults = $authResults->xpath('./*[local-name()="spf"]');
+            foreach ($spfResults as $spf) {
+                $result = (string) ($spf->xpath('./*[local-name()="result"]')[0] ?? '');
+                if (!empty($result)) {
+                    return $result;
+                }
             }
         }
+        
         return 'fail';
     }
 } 

@@ -120,7 +120,9 @@ class DmarcReportImportService
             $report->file_hash = $fileHash;
             $report->save();
 
-            foreach ($report->records as $record) {
+            // Get records from the relation
+            $records = $report->getRelation('records');
+            foreach ($records as $record) {
                 $record->dmarc_report_id = $report->id;
                 $record->save();
             }

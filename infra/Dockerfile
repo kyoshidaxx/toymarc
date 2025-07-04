@@ -40,12 +40,6 @@ COPY src/ .
 RUN composer install --optimize-autoloader
 RUN npm install
 
-# 環境設定ファイルをコピー
-COPY src/.env.example .env
-
-# アプリケーションキーを生成
-RUN php artisan key:generate
-
 # 権限を設定
 RUN chmod -R 777 storage bootstrap/cache
 

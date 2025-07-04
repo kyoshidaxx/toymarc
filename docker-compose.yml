@@ -7,6 +7,9 @@ services:
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
+      - ./src:/var/www/html
+      - /var/www/html/vendor # vendor フォルダは除外（コンテナ内で生成されたものを使用）
+      - /var/www/html/node_modules # node_modules フォルダは除外（コンテナ内で生成されたものを使用）
       - dmarc_reports:/var/www/html/storage/app/dmarc_reports
     ports:
       - "8000:80"

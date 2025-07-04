@@ -18,7 +18,17 @@ git clone [repository-url]
 cd toymarc
 ```
 
-2. Docker コンテナを起動：
+2. **環境設定ファイルの準備**：
+
+```bash
+# .env ファイルを作成
+cp src/env.example src/.env
+
+# アプリケーションキーを生成
+docker-compose run --rm app php artisan key:generate
+```
+
+3. Docker コンテナを起動：
 
 ```bash
 docker-compose up -d --build
@@ -30,11 +40,30 @@ docker-compose up -d --build
 - **パスワード**: `password`（UserFactory のデフォルト）
 - **メール認証**: 済み（`email_verified_at`が設定済み）
 
-**注意**: ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます。
+**注意**: 
+- **必須**: Docker コンテナ起動前に `.env` ファイルの作成とアプリケーションキーの生成が必要です
+- ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます
 
 ### 手動セットアップ（詳細）
 
-1. **Docker コンテナを起動**：
+1. **環境設定ファイルの準備**：
+
+```bash
+# .env ファイルを作成
+cp src/env.example src/.env
+
+# .env ファイルを編集（必要に応じて）
+vim src/.env  # またはお好みのエディタで編集
+```
+
+2. **アプリケーションキーの生成**：
+
+```bash
+# アプリケーションキーを生成
+docker-compose run --rm app php artisan key:generate
+```
+
+3. **Docker コンテナを起動**：
 
 ```bash
 docker-compose up -d --build
@@ -46,7 +75,9 @@ docker-compose up -d --build
 - **パスワード**: `password`（UserFactory のデフォルト）
 - **メール認証**: 済み（`email_verified_at`が設定済み）
 
-**注意**: ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます。
+**注意**: 
+- **必須**: Docker コンテナ起動前に `.env` ファイルの作成とアプリケーションキーの生成が必要です
+- ビルド時に自動的に依存関係のインストール、マイグレーション、シード、フロントエンドビルドが実行されます
 
 ## 📊 アプリケーションの使い方
 
